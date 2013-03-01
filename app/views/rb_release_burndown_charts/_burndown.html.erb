@@ -1,0 +1,67 @@
+<div style="<%= style %>" class="burndown_chart" id="burndown_<%= release.id %>"><div class="loading">Generating chart...</div></div>
+
+<style type="text/css" media="screen">
+  .jqplot-axis {
+  font-size: 0.85em;
+  }
+  .jqplot-title {
+  font-size: 1.1em;
+  }
+  .jqplot-y6axis-tick {
+  padding-right: 0px;
+  }
+</style>
+<script type="text/javascript" language="javascript">
+  <%-
+    burndown = release.burndown
+
+    # Put together series in the correct order for bar/line rendering
+    jqplot_series = Array.new
+    jqplot_series << burndown[:added_points]
+    jqplot_series << burndown[:added_points_pos]
+    jqplot_series << burndown[:backlog_points]
+    jqplot_series << burndown[:closed_points]
+    jqplot_series << burndown[:trend_added]
+    jqplot_series << burndown[:trend_closed]
+
+    chart = {
+      :series => jqplot_series,
+      :options => {
+        :stackSeries => true,
+        :seriesDefaults => {
+          # renderer: RB.$.jqplot.BarRenderer,
+          :rendererOptions => {
+            :barMargin => 30,
+            :fillToZero => true,
+          }
+        },
+        :axes => {
+          :xaxis => {
+            # renderer: RB.$.jqplot.CategoryAxisRenderer
+          },
+          :yaxis => {
+            :padMin => 0,
+          },
+        },
+        :legend => { :show => true, :location => 'ne'},
+        :series => [
+          {:rendererOptions => {:barWidth => 0}},
+          {}, {}, {},
+          {:disableStack => true},
+          {:disableStack => true}
+        ],
+        :noDataIndicator => { :show => true, :indicator => 'No data' }
+      }
+    }
+#TODO labels for each series
+# e.g. series => {:label => 'sprint #'}
+  %>
+RB.$(function() { // render when dom is ready
+  RB.burndown.charts[<%= release.id %>] = <%= chart.to_json.html_safe %>
+  RB.burndown.charts[<%= release.id %>].options.seriesDefaults.renderer = RB.$.jqplot.BarRenderer;
+  RB.burndown.charts[<%= release.id %>].options.axes.xaxis.renderer = RB.$.jqplot.CategoryAxisRenderer;
+  RB.burndown.charts[<%= release.id %>].options.series[4].renderer = RB.$.jqplot.LineRenderer;
+  RB.burndown.charts[<%= release.id %>].options.series[5].renderer = RB.$.jqplot.LineRenderer;
+  RB.burndown.initialize();
+});
+</script>
